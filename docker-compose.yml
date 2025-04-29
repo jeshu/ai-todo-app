@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mcp-todo-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=mcp-todo-app
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcp-todo-backend
+    ports:
+      - "5001:5001"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/mcp-todo-app
+      - NODE_ENV=production
+    depends_on:
+      - mongodb
+      - ollama
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: mcp-todo-frontend
+    ports:
+      - "3000-3100:3000"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+
+  ollama:
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+    container_name: mcp-todo-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  mongodb_data:
+  ollama_data:
